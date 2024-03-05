@@ -329,8 +329,14 @@ app.delete(`${fullApiPath}/genres/:genreId`, (req, res) => {
   if(isNaN(genreId) || !genres.some((genre) => genre.id === genreId)) {
       return res.status(400).json({ message: "Invalid input. Genre id must be valid" })
   }
+
+  // Check if the genre is in use
+  if (books.some((book) => book.genreId === genreId)) {
+      return res.status(400).json({ message: "Invalid input. Genre is in use!" })
+  }
+
   // Check if the genre id is valid
-  if (!genreId || books.some((book) => book.genreId === genreId)) {
+  if (!genreId) {
     // Return a 404 error if the input is invalid
     return res.status(404).json({ message: "Invalid input. Genre is in use or not found!" })
   }
