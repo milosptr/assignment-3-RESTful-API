@@ -1,11 +1,11 @@
 //Sample for Assignment 3
-const express = require("express")
+const express = require('express')
 
 //Import a body parser module to be able to access the request body as json
-const bodyParser = require("body-parser")
+const bodyParser = require('body-parser')
 
 //Use cors to avoid issues with testing on localhost
-const cors = require("cors")
+const cors = require('cors')
 
 const app = express()
 
@@ -19,32 +19,32 @@ app.use(cors())
 
 //Set Cors-related headers to prevent blocking of local requests
 app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*")
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+  res.header('Access-Control-Allow-Origin', '*')
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept')
   next()
 })
 
 let genres = [
-  { id: 1, name: "Fiction" },
-  { id: 2, name: "Non-Fiction" },
-  { id: 3, name: "Science Fiction" },
-  { id: 4, name: "Fantasy" },
+  { id: 1, name: 'Fiction' },
+  { id: 2, name: 'Non-Fiction' },
+  { id: 3, name: 'Science Fiction' },
+  { id: 4, name: 'Fantasy' }
 ]
 
 let books = [
-  { id: 1, title: "Pride and Prejudice", author: "Jane Austin", genreId: 1 },
+  { id: 1, title: 'Pride and Prejudice', author: 'Jane Austin', genreId: 1 },
   {
     id: 2,
-    title: "Independent People",
-    author: "Halldór Laxnes",
-    genreId: 1,
+    title: 'Independent People',
+    author: 'Halldór Laxnes',
+    genreId: 1
   },
   {
     id: 3,
-    title: "Brief Answers to the Big Questions",
-    author: "Stephen Hawking",
-    genreId: 2,
-  },
+    title: 'Brief Answers to the Big Questions',
+    author: 'Stephen Hawking',
+    genreId: 2
+  }
 ]
 
 /* YOUR CODE STARTS HERE */
@@ -56,7 +56,7 @@ let books = [
  * @returns {boolean} - True if the genre id is valid, false otherwise
  */
 const isValidGenreId = (genreId) => {
-  return genres.some(genre => genre.id === genreId);
+  return genres.some((genre) => genre.id === genreId)
 }
 
 /**
@@ -65,7 +65,7 @@ const isValidGenreId = (genreId) => {
  * @returns {name: string, id: number} or undefined
  */
 const findGenreById = (genreId) => {
-    return genres.find(genre => genre.id === genreId);
+  return genres.find((genre) => genre.id === genreId)
 }
 
 /**
@@ -74,7 +74,7 @@ const findGenreById = (genreId) => {
  * @returns {genreId: number, author: string, id: number, title: string} or undefined
  */
 const findBookById = (bookId) => {
-    return books.find(book => book.id === bookId);
+  return books.find((book) => book.id === bookId)
 }
 
 /**
@@ -85,7 +85,7 @@ const findBookById = (bookId) => {
  * @returns {boolean}
  */
 const validateRequiredField = (value, type) => {
-    return !(!value || typeof value !== type || !value.trim());
+  return !(!value || typeof value !== type || !value.trim())
 }
 
 /**
@@ -97,25 +97,25 @@ const validateRequiredField = (value, type) => {
  */
 const validateBookParams = (bookId, genreId) => {
   // Check if the book id and genre id are numbers
-  if(isNaN(bookId) || isNaN(genreId)) {
-    return [400, "Invalid input. Book id and genre id must be numbers"]
+  if (isNaN(bookId) || isNaN(genreId)) {
+    return [400, 'Invalid input. Book id and genre id must be numbers']
   }
 
   // Check if bookId exists within the collection of books
   if (!findBookById(bookId)) {
-    return [404, "Book not found"]
+    return [404, 'Book not found']
   }
 
   // Check if genreId exists within the collection of genres
   if (!isValidGenreId(genreId)) {
-    return [404, "Genre not found"]
+    return [404, 'Genre not found']
   }
 
-  return [200, "Success"]
+  return [200, 'Success']
 }
 
-const apiPath = "api"
-const version = "v1"
+const apiPath = 'api'
+const version = 'v1'
 // Full api path to be used in the routes
 const fullApiPath = `/${apiPath}/${version}`
 
@@ -128,7 +128,7 @@ const fullApiPath = `/${apiPath}/${version}`
 app.get(`${fullApiPath}/books`, (req, res) => {
   const allowedQueryParams = ['filter']
   const queryParams = Object.keys(req.query)
-  const invalidParams = queryParams.filter(p => !allowedQueryParams.includes(p))
+  const invalidParams = queryParams.filter((p) => !allowedQueryParams.includes(p))
 
   // Return a 400 error if any disallowed query parameters are present
   if (invalidParams.length > 0) {
@@ -138,8 +138,8 @@ app.get(`${fullApiPath}/books`, (req, res) => {
   // Handle the genre query filter if provided
   if (req.query.filter) {
     let genreQuery = Array.isArray(req.query.filter) ? req.query.filter : [req.query.filter]
-    genreQuery = genreQuery.map(g => g.toLowerCase())
-    const genreIds = genres.filter(g => genreQuery.includes(g.name.toLowerCase())).map(g => g.id)
+    genreQuery = genreQuery.map((g) => g.toLowerCase())
+    const genreIds = genres.filter((g) => genreQuery.includes(g.name.toLowerCase())).map((g) => g.id)
 
     // If no matching genres found, return an empty array
     if (genreIds.length === 0) {
@@ -147,7 +147,7 @@ app.get(`${fullApiPath}/books`, (req, res) => {
     }
 
     // Return the books that match the genre IDs
-    const filteredBooks = books.filter(book => genreIds.includes(book.genreId))
+    const filteredBooks = books.filter((book) => genreIds.includes(book.genreId))
     return res.status(200).json(filteredBooks)
   }
 
@@ -168,7 +168,7 @@ app.get(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
   // Validate the params
   const [statusCode, message] = validateBookParams(bookId, genreId)
   if (statusCode !== 200) {
-      return res.status(statusCode).json({ message })
+    return res.status(statusCode).json({ message })
   }
 
   // Return the book
@@ -182,7 +182,7 @@ app.get(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
 app.post(`${fullApiPath}/books`, (req, res) => {
   // Ensure the request body is provided
   if (!req.body) {
-    return res.status(400).json({ message: "Invalid input. Please provide a title, author and genreId." })
+    return res.status(400).json({ message: 'Invalid input. Please provide a title, author and genreId.' })
   }
 
   // Ensure 'title' is provided and is a non-empty string
@@ -192,12 +192,14 @@ app.post(`${fullApiPath}/books`, (req, res) => {
 
   // Ensure 'author' is provided and is a non-empty string
   if (!validateRequiredField(req.body?.author, 'string')) {
-      return res.status(400).json({ message: "Invalid input. 'author' is required and must be a non-empty string." })
+    return res.status(400).json({ message: "Invalid input. 'author' is required and must be a non-empty string." })
   }
 
   // Ensure 'genreId' is provided and corresponds to a valid genre
   if (!req.body?.genreId || !isValidGenreId(req.body.genreId)) {
-    return res.status(400).json({ message: "Invalid input. 'genreId' is required and must correspond to a valid genre." })
+    return res
+      .status(400)
+      .json({ message: "Invalid input. 'genreId' is required and must correspond to a valid genre." })
   }
 
   // Create a new book object
@@ -205,7 +207,7 @@ app.post(`${fullApiPath}/books`, (req, res) => {
     id: books.length + 1,
     title: req.body.title.trim(),
     author: req.body.author.trim(),
-    genreId: req.body.genreId,
+    genreId: req.body.genreId
   }
   // Add the new book to the books array
   books.push(newBook)
@@ -226,7 +228,7 @@ app.patch(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
 
   // Ensure the request body is provided
   if (!req.body) {
-      return res.status(400).json({ message: "Invalid input. Please provide a title, author, id and genreId." })
+    return res.status(400).json({ message: 'Invalid input. Please provide a title, author, id and genreId.' })
   }
 
   // Validate the params
@@ -237,22 +239,22 @@ app.patch(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
 
   // Verifies that the book associated with bookId actually belongs to the genreId specified in the URL
   if (!books.some((book) => book.id === bookId && book.genreId === genreId)) {
-      return res.status(404).json({ message: "Book not found in the specified genre" })
+    return res.status(404).json({ message: 'Book not found in the specified genre' })
   }
 
   // Validates book title if provided
   if (req.body.title && !validateRequiredField(req.body.title, 'string')) {
-      return res.status(400).json({ message: "Invalid input. 'title' must be a non-empty string." })
+    return res.status(400).json({ message: "Invalid input. 'title' must be a non-empty string." })
   }
 
   // Validates book author if provided
   if (req.body.author && !validateRequiredField(req.body.author, 'string')) {
-    return res.status(400).json({message: "Invalid input. 'author' must be a non-empty string."})
+    return res.status(400).json({ message: "Invalid input. 'author' must be a non-empty string." })
   }
 
   // Validates genreId if provided in the request body
   if (req.body?.genreId && !isValidGenreId(req.body.genreId)) {
-      return res.status(400).json({ message: "Invalid input. 'genreId' must correspond to a valid genre." })
+    return res.status(400).json({ message: "Invalid input. 'genreId' must correspond to a valid genre." })
   }
 
   // Update the book in the books array
@@ -262,7 +264,7 @@ app.patch(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
         ...book,
         title: req.body.title || book.title,
         author: req.body.author || book.author,
-        genreId: req.body.genreId || book.genreId,
+        genreId: req.body.genreId || book.genreId
       }
     }
     return book
@@ -282,13 +284,13 @@ app.delete(`${fullApiPath}/books/:bookId`, (req, res) => {
   const bookId = Number(req.params.bookId)
 
   // Check if the book id is valid
-  if(isNaN(bookId)) {
-      return res.status(400).json({ message: "Invalid input. Book id must be a number" })
+  if (isNaN(bookId)) {
+    return res.status(400).json({ message: 'Invalid input. Book id must be a number' })
   }
 
   // Check if the book id is valid
   if (!findBookById(bookId)) {
-    return res.status(404).json({ message: "Book not found" })
+    return res.status(404).json({ message: 'Book not found' })
   }
 
   // Find the book to delete
@@ -317,7 +319,7 @@ app.get(`${fullApiPath}/genres`, (req, res) => {
 app.post(`${fullApiPath}/genres`, (req, res) => {
   // Check if the request body
   if (!req.body) {
-    return res.status(400).json({ message: "Invalid input. Please provide a name for the genre." })
+    return res.status(400).json({ message: 'Invalid input. Please provide a name for the genre.' })
   }
 
   // Ensure the name is a string and is not empty
@@ -329,15 +331,15 @@ app.post(`${fullApiPath}/genres`, (req, res) => {
 
   // Check if the genre already exists
   if (genres.some((genre) => genre.name.toLowerCase() === genreName.toLowerCase())) {
-      // Return a 400 error if the genre already exists
-      return res.status(400).json({ message: "Genre already exists!" })
+    // Return a 400 error if the genre already exists
+    return res.status(400).json({ message: 'Genre already exists!' })
   }
 
   // Create a new genre object
   // Add the new genre to the genres array
   const newGenre = {
     id: genres.length + 1,
-    name: genreName,
+    name: genreName
   }
   genres.push(newGenre)
 
@@ -356,19 +358,19 @@ app.delete(`${fullApiPath}/genres/:genreId`, (req, res) => {
 
   // Validate
   // Check if the genre id is valid or if the genre is not in use
-  if(isNaN(genreId)) {
-      return res.status(400).json({ message: "Invalid input. Genre id must be valid" })
+  if (isNaN(genreId)) {
+    return res.status(400).json({ message: 'Invalid input. Genre id must be valid' })
   }
 
   // Check if the genre is in use
   if (books.some((book) => book.genreId === genreId)) {
-      return res.status(400).json({ message: "Invalid input. Genre is in use!" })
+    return res.status(400).json({ message: 'Invalid input. Genre is in use!' })
   }
 
   // Check if the genre id is valid
   if (!genreId || !isValidGenreId(genreId)) {
     // Return a 404 error if the input is invalid
-    return res.status(404).json({ message: "Invalid input. Genre is in use or not found!" })
+    return res.status(404).json({ message: 'Invalid input. Genre is in use or not found!' })
   }
 
   // Find the genre to delete and delete it from the genres array
@@ -384,10 +386,10 @@ app.delete(`${fullApiPath}/genres/:genreId`, (req, res) => {
  * @returns {Object} - A 405 error
  */
 app.delete(`${fullApiPath}/books/`, (req, res) => {
-  return res.status(405).json({ message: "Method not allowed" })
+  return res.status(405).json({ message: 'Method not allowed' })
 })
 app.delete(`${fullApiPath}/genres/`, (req, res) => {
-  return res.status(405).json({ message: "Method not allowed" })
+  return res.status(405).json({ message: 'Method not allowed' })
 })
 
 /**
@@ -396,13 +398,13 @@ app.delete(`${fullApiPath}/genres/`, (req, res) => {
  */
 // This should be the last route
 app.all('*', (req, res) => {
-  res.status(404).json({ message: "Not found" });
-});
+  res.status(404).json({ message: 'Not found' })
+})
 
 /* YOUR CODE ENDS HERE */
 
 /* DO NOT REMOVE OR CHANGE THE FOLLOWING (IT HAS TO BE AT THE END OF THE FILE) */
-if (process.env.NODE_ENV !== "test") {
+if (process.env.NODE_ENV !== 'test') {
   app.listen(port, () => {
     console.log(`Server listening on port ${port}`)
   })
