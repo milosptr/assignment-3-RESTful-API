@@ -49,10 +49,75 @@ let books = [
 
 /* YOUR CODE STARTS HERE */
 
+// Helper functions
+/**
+ * Check if a genre id is valid
+ * @param genreId - The id of the genre
+ * @returns {boolean} - True if the genre id is valid, false otherwise
+ */
+const isValidGenreId = (genreId) => {
+  return genres.some(genre => genre.id === genreId);
+}
+
+/**
+ * Find a genre by its id
+ * @param genreId
+ * @returns {name: string, id: number} or undefined
+ */
+const findGenreById = (genreId) => {
+    return genres.find(genre => genre.id === genreId);
+}
+
+/**
+ * Find a book by its id
+ * @param bookId - The id of the book
+ * @returns {genreId: number, author: string, id: number, title: string} or undefined
+ */
+const findBookById = (bookId) => {
+    return books.find(book => book.id === bookId);
+}
+
+/**
+ * Validate the required fields in the request body
+ * It checks if the value is provided and is of the correct type, and if it is not empty or whitespace
+ * @param value - The value to validate
+ * @param type - The type of the value
+ * @returns {boolean}
+ */
+const validateRequiredField = (value, type) => {
+    return !(!value || typeof value !== type || !value.trim());
+}
+
+/**
+ * Validate the book and genre ids provided in the request
+ * It checks if the ids are numbers and if they exist in the collection of books and genres
+ * @param bookId - The id of the book
+ * @param genreId - The id of the genre
+ * @returns {[number,string]} - An array containing the status code and a message
+ */
+const validateBookParams = (bookId, genreId) => {
+  // Check if the book id and genre id are numbers
+  if(isNaN(bookId) || isNaN(genreId)) {
+    return [400, "Invalid input. Book id and genre id must be numbers"]
+  }
+
+  // Check if bookId exists within the collection of books
+  if (!findBookById(bookId)) {
+    return [404, "Book not found"]
+  }
+
+  // Check if genreId exists within the collection of genres
+  if (!isValidGenreId(genreId)) {
+    return [404, "Genre not found"]
+  }
+
+  return [200, "Success"]
+}
+
 const apiPath = "api"
-const varsion = "v1"
+const version = "v1"
 // Full api path to be used in the routes
-const fullApiPath = `/${apiPath}/${varsion}`
+const fullApiPath = `/${apiPath}/${version}`
 
 /**
  * Get all books
@@ -100,29 +165,14 @@ app.get(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
   const bookId = Number(req.params.bookId)
   const genreId = Number(req.params.genreId)
 
-  // Validate the book id type
-  // Check if the book id is valid and if the genre id is valid
-  if(isNaN(bookId) || isNaN(genreId)) {
-    return res.status(400).json({ message: "Invalid input. Book id and genre id must be numbers" })
-  }
-
-  // Check if bookId exists within the collection of books
-  if (!books.some((book) => book.id === bookId)) {
-    return res.status(404).json({ message: "Book not found" })
-  }
-
-  // Check if genreId exists within the collection of genres
-  if (!genres.some((genre) => genre.id === genreId)) {
-    return res.status(404).json({ message: "Genre not found" })
-  }
-
-  // Validate the book id
-  if (!books.some((book) => book.id === bookId)) {
-    return res.status(404).json({ message: "Book not found!" })
+  // Validate the params
+  const [statusCode, message] = validateBookParams(bookId, genreId)
+  if (statusCode !== 200) {
+      return res.status(statusCode).json({ message })
   }
 
   // Return the book
-  return res.status(200).json(books.find((book) => book.id === bookId))
+  return res.status(200).json(findBookById(bookId))
 })
 
 /**
@@ -130,30 +180,24 @@ app.get(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
  * @returns {Object} - The new book object or a 400 error
  */
 app.post(`${fullApiPath}/books`, (req, res) => {
-  // Validate the input
   // Ensure the request body is provided
   if (!req.body) {
     return res.status(400).json({ message: "Invalid input. Please provide a title, author and genreId." })
   }
 
   // Ensure 'title' is provided and is a non-empty string
-  if (!req.body || !req.body.title || typeof req.body.title !== 'string' || !req.body.title.trim()) {
+  if (!validateRequiredField(req.body?.title, 'string')) {
     return res.status(400).json({ message: "Invalid input. 'title' is required and must be a non-empty string." })
   }
 
   // Ensure 'author' is provided and is a non-empty string
-  if (!req.body || !req.body.author || typeof req.body.author !== 'string' || !req.body.author.trim()) {
+  if (!validateRequiredField(req.body?.author, 'string')) {
       return res.status(400).json({ message: "Invalid input. 'author' is required and must be a non-empty string." })
   }
 
   // Ensure 'genreId' is provided and corresponds to a valid genre
-  if (!req.body.genreId || !genres.some(genre => genre.id === req.body.genreId)) {
+  if (!req.body?.genreId || !isValidGenreId(req.body.genreId)) {
     return res.status(400).json({ message: "Invalid input. 'genreId' is required and must correspond to a valid genre." })
-  }
-
-  // Ensure the genreId provided corresponds to a valid genre
-  if (!genres.some((genre) => genre.id === req.body.genreId)) {
-    return res.status(400).json({ message: "Invalid input. 'genreId' must correspond to a valid genre." })
   }
 
   // Create a new book object
@@ -180,25 +224,15 @@ app.patch(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
   const bookId = Number(req.params.bookId)
   const genreId = Number(req.params.genreId)
 
-  // Validate the input
   // Ensure the request body is provided
   if (!req.body) {
       return res.status(400).json({ message: "Invalid input. Please provide a title, author, id and genreId." })
   }
 
-  // Check if the book id is valid and if the genre id is valid
-  if(isNaN(bookId) || isNaN(genreId)) {
-      return res.status(400).json({ message: "Invalid input. Book id and genre id must be numbers" })
-  }
-
-  // Check if bookId exists within the collection of books
-  if (!books.some((book) => book.id === bookId)) {
-      return res.status(404).json({ message: "Book not found" })
-  }
-
-  // Check if genreId exists within the collection of genres
-  if (!genres.some((genre) => genre.id === genreId)) {
-      return res.status(404).json({ message: "Genre not found" })
+  // Validate the params
+  const [statusCode, message] = validateBookParams(bookId, genreId)
+  if (statusCode !== 200) {
+    return res.status(statusCode).json({ message })
   }
 
   // Verifies that the book associated with bookId actually belongs to the genreId specified in the URL
@@ -207,17 +241,17 @@ app.patch(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
   }
 
   // Validates book title if provided
-  if (req.body?.title && (typeof req.body.title !== 'string' || !req.body.title.trim())) {
+  if (req.body.title && !validateRequiredField(req.body.title, 'string')) {
       return res.status(400).json({ message: "Invalid input. 'title' must be a non-empty string." })
   }
 
   // Validates book author if provided
-  if (req.body?.author && (typeof req.body.author !== 'string' || !req.body.author.trim())) {
+  if (req.body.author && !validateRequiredField(req.body.author, 'string')) {
     return res.status(400).json({message: "Invalid input. 'author' must be a non-empty string."})
   }
 
-  // Validates genreId if provided
-  if (req.body?.genreId && !genres.some((genre) => genre.id === req.body.genreId)) {
+  // Validates genreId if provided in the request body
+  if (req.body?.genreId && !isValidGenreId(req.body.genreId)) {
       return res.status(400).json({ message: "Invalid input. 'genreId' must correspond to a valid genre." })
   }
 
@@ -234,10 +268,8 @@ app.patch(`${fullApiPath}/genres/:genreId/books/:bookId`, (req, res) => {
     return book
   })
 
-  const updatedBook = books.find((book) => book.id === bookId)
-
   // Return the updated book
-  return res.status(200).json(updatedBook)
+  return res.status(200).json(findBookById(bookId))
 })
 
 /**
@@ -249,19 +281,18 @@ app.delete(`${fullApiPath}/books/:bookId`, (req, res) => {
   // Get the book id from the request
   const bookId = Number(req.params.bookId)
 
-  // Validate
   // Check if the book id is valid
   if(isNaN(bookId)) {
       return res.status(400).json({ message: "Invalid input. Book id must be a number" })
   }
 
   // Check if the book id is valid
-  if (!books.some((book) => book.id === bookId)) {
+  if (!findBookById(bookId)) {
     return res.status(404).json({ message: "Book not found" })
   }
 
   // Find the book to delete
-  const book = books.find((book) => book.id === bookId)
+  const book = findBookById(bookId)
   // Delete the book from the books array
   books = books.filter((b) => b.id !== book.id)
 
@@ -284,14 +315,13 @@ app.get(`${fullApiPath}/genres`, (req, res) => {
  * @returns {Object} - The new genre object or a 400 error
  */
 app.post(`${fullApiPath}/genres`, (req, res) => {
-  // Validate the input
-  // Check if the request body and name are provided
-  if (!req.body || !req.body.hasOwnProperty('name')) {
+  // Check if the request body
+  if (!req.body) {
     return res.status(400).json({ message: "Invalid input. Please provide a name for the genre." })
   }
 
-  // Ensure the name is a string
-  if (typeof req.body.name !== 'string' || !req.body.name.trim()) {
+  // Ensure the name is a string and is not empty
+  if (!validateRequiredField(req.body.name, 'string')) {
     return res.status(400).json({ message: "Invalid input. 'name' must be a non-empty string." })
   }
 
@@ -336,14 +366,13 @@ app.delete(`${fullApiPath}/genres/:genreId`, (req, res) => {
   }
 
   // Check if the genre id is valid
-  if (!genreId || !genres.some((genre) => genre.id === genreId)) {
+  if (!genreId || !isValidGenreId(genreId)) {
     // Return a 404 error if the input is invalid
     return res.status(404).json({ message: "Invalid input. Genre is in use or not found!" })
   }
 
-  // Find the genre to delete
-  // Delete the genre from the genres array
-  const genre = genres.find((genre) => genre.id === genreId)
+  // Find the genre to delete and delete it from the genres array
+  const genre = findGenreById(genreId)
   genres = genres.filter((g) => g.id !== genre.id)
 
   // Return the deleted genre
